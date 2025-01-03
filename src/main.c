@@ -1,3 +1,5 @@
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -45,4 +47,84 @@ enum {
   FL_NEG = 1 << 2,
 };
 
-int main() { printf("Hello World!"); }
+uint16_t memoryRead(uint16_t);
+
+int main(int argc, char *argv[]) {
+
+  // handle arguments
+
+  // for (int i = 0; i < argc; i++) {
+  //   printf("%d: %s\n", i, argv[i]);
+  // }
+
+  enum {
+    PC_START = 0x3000,
+  };
+
+  reg[R_PC] = PC_START;
+  bool isRunning = true;
+
+  while (isRunning) {
+
+    // fetch instruction
+    uint16_t instruction = memoryRead(reg[R_PC]++);
+    uint16_t opcode = instruction >> 12;
+
+    switch (opcode) {
+    case OP_ADD:
+      // add
+      break;
+    case OP_AND:
+      // and
+      break;
+    case OP_BR:
+      // break
+      break;
+    case OP_JMP:
+      // Jump
+      break;
+    case OP_JSR:
+      // jump register
+      break;
+    case OP_LD:
+      // load
+      break;
+    case OP_LDI:
+      // load indirect
+      break;
+    case OP_LDR:
+      // load register
+      break;
+    case OP_LEA:
+      // load effective address
+      break;
+    case OP_NOT:
+      // not
+      break;
+    case OP_RES:
+      // reserved
+      break;
+    case OP_RTI:
+      // unused
+      break;
+    case OP_ST:
+      // store
+      break;
+    case OP_STI:
+      // store indirect
+      break;
+    case OP_STR:
+      // store register
+      break;
+    case OP_TRAP:
+      // trap
+      break;
+
+    default:
+      // bad opcode (no match)
+      break;
+    }
+  }
+
+  return 0;
+}
