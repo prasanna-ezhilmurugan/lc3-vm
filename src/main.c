@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MAX_MEMORY 1 << 16
 uint16_t memory[MAX_MEMORY];
@@ -48,6 +49,8 @@ enum {
 };
 
 uint16_t memoryRead(uint16_t);
+int read_image(char *arg);
+uint16_t sign_extend(uint16_t x, int bitcount);
 
 int main(int argc, char *argv[]) {
 
@@ -56,6 +59,18 @@ int main(int argc, char *argv[]) {
   // for (int i = 0; i < argc; i++) {
   //   printf("%d: %s\n", i, argv[i]);
   // }
+
+  if (argc < 2) {
+    printf("lc3 [image-file] ... \n");
+    exit(2);
+  }
+
+  for (int i = 1; i < argc; i++) {
+    if (!read_image(argv[i])) {
+      printf("Failed to load image: %s\n", argv[i]);
+      exit(1);
+    }
+  }
 
   enum {
     PC_START = 0x3000,
@@ -127,4 +142,50 @@ int main(int argc, char *argv[]) {
   }
 
   return 0;
+}
+
+uint16_t sign_extend(uint16_t x, int bit_count) {
+  if ((x >> (bit_count - 1)) & 1) {
+    x |= (0xFFFF << bit_count);
+  }
+  return x;
+}
+
+void update_flags(uint16_t r) {
+  if (reg[r] == 0) {
+    reg[R_COND] = FL_ZRO;
+  } else if (reg[r] >> 15) {
+    reg[R_COND] = FL_NEG;
+  } else {
+    reg[R_COND] = FL_POS;
+  }
+}
+
+void ADD(uint16_t instruction) {
+  // destination register
+  uint16_t r0 = (instruction >> 9) & 0x7;
+  // first operand sr1
+  uint16_t r1 = (instruction >> 6) & 0x7;
+  // flag whether immediate addressing
+  uint16_t imm_flag = (instruction >> 5) & 0x1;
+
+  if (imm_flag) {
+    uint16_t imm5 = sign_extend(instruction & 0x1F, 5);
+    reg[r0] = reg[r1] + imm5;
+  } else {
+    // second operand sr2
+    uint16_t r2 = (instruction) & 0x7;
+    reg[r0] = reg[r1] + reg[r2];
+  }
+  update_flags(r0);
+}
+
+void NOT(uint16_t instruction) {
+  // destination register
+  uint16_t r0 = (instruction >> 9) & 0x7;
+  // src register
+  uint16_t r1 = (instruction >> 6) & 0x7;
+
+  reg[r0] = ~reg[r1];
+  update_flags(r0);
 }
